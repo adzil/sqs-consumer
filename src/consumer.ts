@@ -60,7 +60,8 @@ export class Consumer extends TypedEventEmitter {
   private terminateVisibilityTimeout:
     | boolean
     | number
-    | ((message: Message[]) => number);
+    | ((messages: Message[]) => number)
+    | ((messages: Message[], err: Error) => number);
   private waitTimeSeconds: number;
   private authenticationErrorTimeout: number;
   private pollingWaitTimeMs: number;
@@ -381,7 +382,7 @@ export class Consumer extends TypedEventEmitter {
 
       if (this.terminateVisibilityTimeout !== false) {
         if (typeof this.terminateVisibilityTimeout === "function") {
-          const timeout = this.terminateVisibilityTimeout([message]);
+          const timeout = this.terminateVisibilityTimeout([message], err);
           await this.changeVisibilityTimeout(message, timeout);
         } else {
           const timeout =
@@ -428,7 +429,7 @@ export class Consumer extends TypedEventEmitter {
 
       if (this.terminateVisibilityTimeout !== false) {
         if (typeof this.terminateVisibilityTimeout === "function") {
-          const timeout = this.terminateVisibilityTimeout(messages);
+          const timeout = this.terminateVisibilityTimeout(messages, err);
           await this.changeVisibilityTimeoutBatch(messages, timeout);
         } else {
           const timeout =

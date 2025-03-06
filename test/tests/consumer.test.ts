@@ -1080,6 +1080,47 @@ describe("Consumer", () => {
         }),
       );
     });
+    
+    it("terminates message visibility timeout with a function that accepts error to calculate timeout on processing error", async () => {
+      class CustomError extends Error {
+        constructor(message: string, public readonly timeout: number) {
+          super(message);
+        }
+      }
+
+      handleMessage.rejects(new CustomError("Processing error", 30));
+
+      consumer = new Consumer({
+        queueUrl: QUEUE_URL,
+        messageSystemAttributeNames: ["ApproximateReceiveCount"],
+        region: REGION,
+        handleMessage,
+        sqs,
+        terminateVisibilityTimeout: (_messages: Message[], err: Error) => {
+          if (err.cause instanceof CustomError) {
+            return err.cause.timeout;
+          }
+          return 0;
+        },
+      });
+
+      consumer.start();
+      await pEvent(consumer, "processing_error");
+      consumer.stop();
+
+      sandbox.assert.calledWith(
+        sqs.send.secondCall,
+        mockChangeMessageVisibility,
+      );
+      sandbox.assert.match(
+        sqs.send.secondCall.args[0].input,
+        sinon.match({
+          QueueUrl: QUEUE_URL,
+          ReceiptHandle: "receipt-handle",
+          VisibilityTimeout: 30,
+        }),
+      );
+    });
 
     it("changes message visibility timeout on processing error", async () => {
       handleMessage.rejects(new Error("Processing error"));

@@ -75,7 +75,8 @@ export interface ConsumerOptions {
   terminateVisibilityTimeout?:
     | boolean
     | number
-    | ((messages: Message[]) => number);
+    | ((messages: Message[]) => number)
+    | ((messages: Message[], err: Error) => number);
   /**
    * The interval (in seconds) between requests to extend the message visibility timeout.
    *
