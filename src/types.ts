@@ -70,6 +70,8 @@ export interface ConsumerOptions {
    * also specify a different timeout using a number.
    * If you would like to use exponential backoff, you can pass a function that returns
    * a number and it will use that as the value for the timeout.
+   * If the passed function accepts an error, the error thrown by the handler will be
+   * passed and may be used to determine the timeout value.
    * @defaultvalue `false`
    */
   terminateVisibilityTimeout?:
